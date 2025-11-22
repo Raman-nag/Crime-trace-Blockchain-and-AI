@@ -6,7 +6,7 @@ module.exports = {
   networks: {
     hardhat: {},
     ganache: {
-      url: 'http://127.0.0.1:7545',
+      url: 'http://127.0.0.1:8545',
     },
   },
 };
