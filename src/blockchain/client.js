@@ -1,4 +1,4 @@
-import { BrowserProvider, Contract, keccak256, toUtf8Bytes } from 'ethers';
+import { BrowserProvider, Contract, keccak256, toUtf8Bytes, isAddress } from 'ethers';
 import { CrimeTraceABI } from './crimeTraceAbi.js';
 
 const ADMIN_ADDRESS = import.meta.env.VITE_ADMIN_ADDRESS || '';
@@ -28,6 +28,12 @@ export async function connectWallet() {
 export function getContractInstance(signerOrProvider) {
   if (!CONTRACT_ADDRESS) {
     throw new Error('CrimeTrace contract address is not configured (VITE_CRIME_TRACE_ADDRESS).');
+  }
+
+  if (!isAddress(CONTRACT_ADDRESS)) {
+    throw new Error(
+      'CrimeTrace contract address in VITE_CRIME_TRACE_ADDRESS is invalid. Please set it to a valid 0x... address for the current network.'
+    );
   }
 
   return new Contract(CONTRACT_ADDRESS, CrimeTraceABI, signerOrProvider);

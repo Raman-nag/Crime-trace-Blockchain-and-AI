@@ -51,7 +51,7 @@ export default function LoginPage() {
       }
 
       showToast('Welcome back, Platform Admin.');
-      navigate('/admin/dashboard');
+      navigate('/admin');
     } catch (err) {
       setError(err.message || 'Failed to login as admin.');
     } finally {
@@ -63,24 +63,32 @@ export default function LoginPage() {
     try {
       setLoading(true);
       setError('');
-      if (!stationId) {
+      const trimmedId = stationId.trim();
+
+      if (!trimmedId) {
         setError('Please enter your Station Unique ID.');
         return;
       }
-      const numericId = BigInt(stationId);
       const { address, provider } = await ensureWallet();
       const contract = getContractInstance(provider);
 
-      let isActive = false;
       try {
-        isActive = await contract['isRegisteredStation(address,uint256)'](address, numericId);
+        const [id, name, wallet, active, place, code, registeredAt] = await contract.getStationByWallet(address);
+
+        if (!active) {
+          setError('This wallet is not mapped to any active police station. Contact platform admin.');
+          return;
+        }
+
+        const onChainCode = (code || '').toLowerCase();
+        const inputCode = trimmedId.toLowerCase();
+
+        if (!onChainCode || onChainCode !== inputCode) {
+          setError('Station Unique ID does not match the ID assigned by the platform admin.');
+          return;
+        }
       } catch (innerErr) {
         console.error(innerErr);
-        setError('Unable to verify station on-chain.');
-        return;
-      }
-
-      if (!isActive) {
         setError('This wallet is not mapped to any active police station. Contact platform admin.');
         return;
       }
@@ -108,7 +116,7 @@ export default function LoginPage() {
       }
 
       showToast('Welcome back, Citizen.');
-      navigate('/citizen/dashboard');
+      navigate('/citizen');
     } catch (err) {
       setError(err.message || 'Failed to login as citizen.');
     } finally {
@@ -201,10 +209,10 @@ export default function LoginPage() {
               <div className="field">
                 <label>Station Unique ID</label>
                 <input
-                  type="number"
+                  type="text"
                   value={stationId}
                   onChange={(e) => setStationId(e.target.value)}
-                  placeholder="e.g. 101"
+                  placeholder="e.g. CC-PS-01 or bang-007"
                 />
               </div>
               <div className="field">
